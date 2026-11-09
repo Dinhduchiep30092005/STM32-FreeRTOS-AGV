@@ -1,0 +1,26 @@
+Dò line
+AGV_LineSample line = AGV_Line_Read();
+
+if (line.valid)
+{
+    float error = line.error;
+    uint8_t bits = line.bits;
+}
+
+Speed
+AGV_EncoderSample encoder =
+    AGV_Encoder_Sample();
+
+float rpm_L = encoder.left_rpm_magnitude;
+float rpm_R = encoder.right_rpm_magnitude;
+
+Khoảng cách
+AGV_Sonar_Trigger();
+
+// Kiểm tra sau khi Echo được xử lý
+AGV_SonarSample sonar = AGV_Sonar_Poll();
+
+if (sonar.valid)
+{
+    float distance = sonar.distance_cm;
+}
