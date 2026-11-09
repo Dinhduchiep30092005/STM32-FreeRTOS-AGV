@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include "main.h" // Thư viện chân GPIO sinh ra từ STM32CubeMX
 
-extern TIM_HandleTypeDef htim1; // Thay theo Timer thực tế nhóm chọn băm xung PWM
+extern TIM_HandleTypeDef htim3; // TIM3: PWMA = PA6 (CH1), PWMB = PA7 (CH2); TIM1 dành cho servo
 
-#define MOTOR_TIM       htim1
+#define MOTOR_TIM       htim3
 #define CHANNEL_L       TIM_CHANNEL_1
 #define CHANNEL_R       TIM_CHANNEL_2
 
