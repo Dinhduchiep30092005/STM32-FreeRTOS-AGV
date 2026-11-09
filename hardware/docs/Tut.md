@@ -136,10 +136,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t pin)          /* duy nhất, trong app_rtos
 
 ## 5. Đưa file vào dự án
 
-- Chép `Core/Inc/*.h` vào thư mục header tương ứng của dự án STM32CubeIDE.
-- Chép `Core/Src/*.c` vào thư mục mã nguồn tương ứng.
+- Chép `hardware/src/*.h` vào thư mục header tương ứng của dự án STM32CubeIDE.
+- Chép `hardware/src/*.c` vào thư mục mã nguồn tương ứng.
 - Kiểm tra đường dẫn include tại **Project > Properties**.
-- Ví dụ gọi hàm: xem `Docoutput.txt` ở thư mục `harware and sensor`. (File `Examples/main_user_code.c.txt` hiện chưa có.)
+- Ví dụ gọi hàm: xem `Docoutput.txt` ở thư mục `hardware/docs`. (File `Examples/main_user_code.c.txt` hiện chưa có.)
 - Bộ này **không bao gồm** các hàm khởi tạo phần cứng sinh tự động từ CubeMX.
 - Tên hàm và tên driver được đặt tiền tố riêng để hạn chế xung đột với mã của nhóm.
 

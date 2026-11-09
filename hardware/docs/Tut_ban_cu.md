@@ -75,8 +75,8 @@ Thiết lập:
 
 ## 7. Đưa file vào 
 
-- Chép `Core/Inc/*.h` vào thư mục header tương ứng của dự án STM32CubeIDE.
-- Chép `Core/Src/*.c` vào thư mục mã nguồn tương ứng.
+- Chép `hardware/src/*.h` vào thư mục header tương ứng của dự án STM32CubeIDE.
+- Chép `hardware/src/*.c` vào thư mục mã nguồn tương ứng.
 - Kiểm tra đường dẫn include tại **Project > Properties**.
 - Xem ví dụ trong `Examples/main_user_code.c.txt`.
 - Bộ này **không bao gồm** các hàm khởi tạo phần cứng sinh tự động từ CubeMX.
