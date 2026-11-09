@@ -19,8 +19,9 @@ void control_init(void) {
     // PID Khoảng cách: khoảng cách -> V_base [-150..+150 rpm]
     pid_init(&pid_dist, 8.0f, 0.2f, 1.0f, -150.0f, 150.0f, 50.0f);
     // PID Tốc độ 2 bánh (vòng trong): sai số rpm -> xung PWM [0..+1000], chỉ chạy tiến
-    pid_init(&pid_speed_L, 7.5f, 1.2f, 0.1f, 0.0f, MAX_PWM, 300.0f);
-    pid_init(&pid_speed_R, 7.5f, 1.2f, 0.1f, 0.0f, MAX_PWM, 300.0f);
+    // Kd = 0: rpm đo theo cửa sổ 100 ms nhảy bậc 30 rpm, khâu D sẽ tạo gai ~300 PWM
+    pid_init(&pid_speed_L, 7.5f, 1.2f, 0.0f, 0.0f, MAX_PWM, 300.0f);
+    pid_init(&pid_speed_R, 7.5f, 1.2f, 0.0f, 0.0f, MAX_PWM, 300.0f);
 }
 
 void control_reset_all(void) {

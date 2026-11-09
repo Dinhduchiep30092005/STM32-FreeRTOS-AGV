@@ -98,7 +98,7 @@ Làm tròn sẽ mất độ mịn ±0,5 và ±1,5 của trung bình trọng số
 rpm = Σdelta × 60000 / (CPWR × Σdt_ms)
 ```
 
-Cửa sổ 100 ms làm rpm trễ khoảng 50 ms so với thực tế. PID vòng trong vẫn chạy được nhưng phải đặt hệ số mềm. **Cách tốt hơn** là Mảng 1 bổ sung đo chu kỳ giữa 2 xung (mục 5).
+Cửa sổ 100 ms làm rpm trễ khoảng 50 ms so với thực tế. PID vòng trong vẫn chạy được nhưng phải đặt hệ số mềm: mỗi xung trong cửa sổ tương ứng 30 rpm (20 xung/vòng), nên `control_init()` đặt Kd vòng trong = 0 để tránh gai khoảng 300 PWM, còn Kp chỉnh trên xe bằng lệnh `KP2`. **Cách tốt hơn** là Mảng 1 bổ sung đo chu kỳ giữa 2 xung (mục 5).
 
 `AGV_Encoder_Sample()` có trạng thái bên trong (`prev_*`) nên **chỉ SensorTask được gọi**.
 
