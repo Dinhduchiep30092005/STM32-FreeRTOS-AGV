@@ -167,6 +167,16 @@ static void ControlTask(void *arg);
 static void SensorTask (void *arg);
 static void SonarTask  (void *arg);
 
+/* Lời gọi xTaskCreate nằm ngoài configASSERT: nếu configASSERT bị định nghĩa rỗng
+ * thì task vẫn được tạo. */
+static void create_task(TaskFunction_t fn, const char *name,
+                        uint16_t stack, UBaseType_t prio)
+{
+    BaseType_t ok = xTaskCreate(fn, name, stack, NULL, prio, NULL);
+    configASSERT(ok == pdPASS);
+    (void)ok;
+}
+
 void app_rtos_init(void)
 {
     /* ---- 1. Đối tượng IPC ---- */
@@ -200,12 +210,12 @@ void app_rtos_init(void)
     HAL_UART_Receive_IT(&huart1, &uartRxByte, 1);
 
     /* ---- 4. Task ---- */
-    configASSERT(xTaskCreate(ControlTask, "Control", STACK_CONTROL, NULL, PRIO_CONTROL, NULL) == pdPASS);
-    configASSERT(xTaskCreate(SensorTask,  "Sensor",  STACK_SENSOR,  NULL, PRIO_SENSOR,  NULL) == pdPASS);
-    configASSERT(xTaskCreate(SonarTask,   "Sonar",   STACK_SONAR,   NULL, PRIO_SONAR,   NULL) == pdPASS);
-    configASSERT(xTaskCreate(ModeTask,    "Mode",    STACK_MODE,    NULL, PRIO_MODE,    NULL) == pdPASS);
-    configASSERT(xTaskCreate(CommTask,    "Comm",    STACK_COMM,    NULL, PRIO_COMM,    NULL) == pdPASS);
-    configASSERT(xTaskCreate(UiTask,      "Ui",      STACK_UI,      NULL, PRIO_UI,      NULL) == pdPASS);
+    create_task(ControlTask, "Control", STACK_CONTROL, PRIO_CONTROL);
+    create_task(SensorTask,  "Sensor",  STACK_SENSOR,  PRIO_SENSOR);
+    create_task(SonarTask,   "Sonar",   STACK_SONAR,   PRIO_SONAR);
+    create_task(ModeTask,    "Mode",    STACK_MODE,    PRIO_MODE);
+    create_task(CommTask,    "Comm",    STACK_COMM,    PRIO_COMM);
+    create_task(UiTask,      "Ui",      STACK_UI,      PRIO_UI);
 }
 ```
 
