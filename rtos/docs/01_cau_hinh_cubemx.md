@@ -173,7 +173,8 @@ Heap: `heap_4`. Tab **Tasks and Queues**: giữ `defaultTask`, không tạo gì 
 | `src/pid/src/pid.h`, `control.h`, `tb6612.h` | `Core/Inc/` |
 | `src/pid/src/pid.c`, `control.c`, `tb6612.c` | `Core/Src/` |
 | `src/pid/src/test_control_pc.c` | **Không chép**, đây là chương trình test trên máy tính, sẽ trùng `main()` |
-| Code Mảng 3 (`app_*.c/.h`), thư viện SSD1306 | `Core/Inc/`, `Core/Src/` |
+| `src/rtos/src/*.h` (`app_*` và thư viện SSD1306, gồm `ssd1306_conf.h` đã cấu hình sẵn) | `Core/Inc/` |
+| `src/rtos/src/*.c` | `Core/Src/` |
 
 3. Mở `Core/Src/freertos.c`, thêm vào các vùng `USER CODE`:
 

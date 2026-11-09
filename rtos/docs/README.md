@@ -6,7 +6,7 @@ Tài liệu mô tả phần **hệ điều hành thời gian thực** của xe A
 |---|---|---|
 | Mảng 1: cảm biến | `src/hardware` | `agv_line`, `agv_encoder`, `agv_sonar`, `agv_servo`, `agv_fc51`, `agv_sensor_system` + `Tut.md` (sơ đồ chân toàn xe) |
 | Mảng 2: điều khiển | `src/pid` | `pid`, `control`, `tb6612` |
-| Mảng 3: RTOS | `src/rtos` | Tài liệu này (`src/rtos/docs`) + `app_rtos.c`, `app_mode.c`, `app_comm.c`, `app_ui.c` |
+| Mảng 3: RTOS | `src/rtos` | Tài liệu này (`src/rtos/docs`) + `src/rtos/src`: `app_rtos.c`, `app_mode.c`, `app_comm.c`, `app_ui.c`, thư viện OLED `ssd1306` |
 
 | Mục | Nội dung |
 |---|---|

@@ -261,5 +261,5 @@ float AGV_Encoder_GetRpmPeriod(uint8_t side)
 - [ ] Mảng 1 đã test cực tính dò line (`AGV_LINE_ACTIVE`), FC-51 (`AGV_FC_ACTIVE`), và hiệu chuẩn `CPWR`.
 - [ ] Không file nào ngoài `app_rtos.c` định nghĩa `HAL_GPIO_EXTI_Callback`.
 - [ ] Không file nào ngoài `app_rtos.c` gọi `tb6612_set_motor()` / `tb6612_stop()` (trừ hook lỗi).
-- [ ] Không có `HAL_Delay()` trong code được gọi từ task.
+- [ ] Không có `HAL_Delay()` trong code được gọi từ task (trừ `ssd1306_Init()` của thư viện OLED, chạy một lần ở UiTask ưu tiên thấp nhất).
 - [ ] Line lệch phải → telemetry `err` dương → bánh trái nhanh hơn (kiểm tra khi kê xe lên).
