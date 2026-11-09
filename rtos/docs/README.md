@@ -319,4 +319,4 @@ AGV_Project/                         ← project STM32CubeIDE
 | [`05_giao_thuc_bluetooth.md`](05_giao_thuc_bluetooth.md) | Lệnh, telemetry, cấu hình HC-05, CommTask |
 | [`06_kiem_thu_va_do_dac.md`](06_kiem_thu_va_do_dac.md) | Dựng hệ thống từng bước, kiểm thử kịch bản, đo thời gian và stack, bảng lỗi |
 
-Sơ đồ chân toàn xe: `src/hardware/docs/Tut.md`, mục 1.2.
+Sơ đồ chân toàn xe: `src/hardware/docs/Tut.md`, mục 1.2. Đấu dây nguồn, động cơ và mạch phụ: mục 1.3.

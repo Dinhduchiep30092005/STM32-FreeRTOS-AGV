@@ -11,7 +11,7 @@
 | Encoder FC-03 trái/phải | PB6, PB7 | GPIO_EXTI6, EXTI7, cạnh lên (Rising edge); bật ngắt EXTI9_5 | 3,3 V hoặc 5 V (PB6, PB7 chịu được 5 V) |
 | FC-51 trái/phải | PB0, PB1 | GPIO Input | **3,3 V** (PB0, PB1 không chịu được 5 V) |
 | HC-SR04 TRIG | PB9 | GPIO Output Push-Pull; mặc định mức thấp | 5 V |
-| HC-SR04 ECHO | PB8 | GPIO_EXTI8, cả hai cạnh; bật ngắt EXTI9_5 | 5 V. PB8 chịu được 5 V nên nối thẳng được; giữ mạch chia áp 5 V → 3,3 V cho an toàn |
+| HC-SR04 ECHO | PB8 | GPIO_EXTI8, cả hai cạnh; bật ngắt EXTI9_5 | 5 V. **Bắt buộc giữ mạch chia áp 5 V → 3,3 V** vì PB8 bật Pull-down nội (xem mục 1.3), không nối thẳng |
 | Tín hiệu servo SG90 | PA8 | TIM1_CH1, PWM Generation CH1 | 5 V từ LM2596 |
 | Timer đo thời gian micro giây | TIM2 | Internal Clock; bộ đếm 1 MHz, ARR = 65535, không xuất chân | – |
 | Bộ định thời PWM servo | TIM1 | Bộ đếm 1 MHz, ARR = 19999; CCR1 từ 1000–2000 tick (xung khoảng 1–2 ms, tần số 50 Hz) | – |
@@ -55,6 +55,52 @@ Phân chia timer:
 | TIM4 | **Timebase của HAL** (SYS → Timebase Source = TIM4), vì FreeRTOS dùng SysTick |
 
 Lưu ý: PA11, PA12 là chân USB, không bật USB trong CubeMX. PA15, PB3, PB4 chỉ dùng được khi chọn Debug = Serial Wire.
+
+### 1.3. Đấu dây đầy đủ (nguồn, động cơ, mạch phụ)
+
+Mục 1.2 cho biết chân tín hiệu của STM32. Mục này bổ sung phần nguồn, động cơ và các mạch phụ. Ô `___` là thông số nhóm điền theo linh kiện thực tế.
+
+**Nguồn.** Một khay 4 viên 18650, ghép 2 nối tiếp × 2 song song (2S2P): 7,4 V danh định, đầy 8,4 V.
+
+> **Đo trước khi nối:** lắp đủ 4 pin, đo hai dây ra của khay. Kết quả phải trong khoảng 6–8,4 V. Nhiều khay 4 viên bán sẵn nối tiếp cả 4 viên: nếu đo ra 12–16,8 V thì **không được nối vào VM**, vì TB6612 chỉ chạy tới 13,5 V (tối đa tuyệt đối 15 V).
+
+| Từ | Đến | Ghi chú |
+|---|---|---|
+| Khay pin (+) | Công tắc | |
+| Công tắc | LM2596 IN+ và TB6612 VM | Tụ 470–1000 µF giữa VM và GND, đặt sát TB6612 |
+| Khay pin (−) | LM2596 IN− và GND chung | |
+| LM2596 OUT+ | Chân 5V Blue Pill, servo, HC-SR04, HC-05 | Chỉnh đúng 5,0 V **trước khi** nối tải |
+| LM2596 OUT− | GND chung | |
+| Chân 3.3 Blue Pill | Dò line, FC-51, TB6612 VCC | Dò line và FC-51 nối vào chân không chịu được 5 V |
+| 3,3 V hoặc 5 V | Encoder FC-03 | PB6, PB7 chịu được 5 V |
+| ___ V (theo nhãn module) | OLED VCC | |
+
+**GND chung:** âm pin, LM2596, Blue Pill, TB6612 và mọi module phải nối với nhau.
+
+**TB6612**
+
+| Chân | Nối với | Ghi chú |
+|---|---|---|
+| VM | Sau công tắc | Điện áp định mức động cơ: ___ V, đối chiếu với 8,4 V khi pin đầy |
+| VCC | 3,3 V từ Blue Pill | Không cấp 5 V: ngưỡng mức cao là 0,7 × VCC, tín hiệu 3,3 V của STM32 sẽ không đủ |
+| GND | GND chung | Nối đủ các chân GND của module |
+| STBY, PWMA, PWMB, AIN1, AIN2, BIN1, BIN2 | Xem mục 1.2 | |
+| AO1, AO2 | Động cơ **trái** | Kênh A trong `tb6612.c` |
+| BO1, BO2 | Động cơ **phải** | Kênh B trong `tb6612.c` |
+
+Bánh nào quay ngược chiều thì đổi hai dây của động cơ đó, không sửa code.
+
+**Mạch phụ**
+
+| Mạch | Cách nối | Giá trị |
+|---|---|---|
+| Chia áp Echo | Echo → R1 → PB8; PB8 → R2 → GND | R2 / (R1 + R2) ≈ 2/3. R1 = ___, R2 = ___; R2 nên nhỏ hơn nhiều so với pull-down nội (khoảng 40 kΩ) |
+| LED xanh, đỏ | PA11, PA12 → 220 Ω → anode LED; cathode → GND | Mức cao = sáng |
+| Còi | PA15 → 1 kΩ → cực B S8050; E → GND; C → còi (−); còi (+) → ___ V | Mức cao = kêu |
+| HC-05 | Xem `rtos/docs/05_giao_thuc_bluetooth.md`, mục 1 | |
+| ST-Link | Khi xe đang cấp nguồn, chỉ nối SWDIO, SWCLK, GND | Không nối thêm 3,3 V của ST-Link |
+
+**Cấp nguồn lần đầu:** (1) đo điện áp khay; (2) chưa nối tải, chỉnh LM2596 ra 5,0 V; (3) đo thông mạch để chắc 5 V, 3,3 V và VM không chập GND; (4) kê xe lên rồi mới bật công tắc.
 
 ## 2. Cấu hình clock và Timer trong CubeMX
 
