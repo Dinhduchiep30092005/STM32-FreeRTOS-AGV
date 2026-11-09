@@ -91,7 +91,7 @@ FreeRTOS có thể đếm tổng thời gian mỗi task được chạy. Cần m
 
 **1. Bật trong CubeMX:** `GENERATE_RUN_TIME_STATS` = Enabled, `USE_STATS_FORMATTING_FUNCTIONS` = Enabled.
 
-Code ở bước 3 và 4 đã có sẵn trong `rtos/src`, chỉ được biên dịch khi bật hai tùy chọn trên.
+Code ở bước 3 và 4 đã có sẵn trong `Core/Src`, chỉ được biên dịch khi bật hai tùy chọn trên.
 
 **2. Thêm vào `FreeRTOSConfig.h`** (trong vùng `USER CODE BEGIN Defines`):
 

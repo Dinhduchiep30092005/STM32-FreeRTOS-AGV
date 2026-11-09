@@ -108,7 +108,7 @@ Khi `sonar.valid == false`, `distance_cm = 0`. Nếu truyền 0 vào `control_fo
 
 ---
 
-## 4. Các sửa đổi ở Mảng 2 trong `src/pid/src`
+## 4. Các sửa đổi ở Mảng 2 (`pid`, `control`, `tb6612` trong `Core/Src`)
 
 > **Trạng thái:** Việc 1–7 đã sửa trong code ngày 9/11, Việc 8 chưa làm. Nội dung bên dưới giữ lại để đối chiếu.
 
@@ -183,7 +183,7 @@ Tên có hai dấu chấm, CubeIDE có thể không nhận là file C.
 
 ### Việc 6. `main.c` là chương trình test trên máy tính
 
-Đổi tên thành `test_control_pc.c` và để ngoài project STM32, tránh trùng `main()` với file CubeMX sinh.
+Đổi tên thành `test_control_pc.c` và để ngoài project STM32 (hiện ở `tests/`), tránh trùng `main()` với file CubeMX sinh.
 
 ### Việc 7. Thêm hàm đổi hệ số khi đang chạy
 

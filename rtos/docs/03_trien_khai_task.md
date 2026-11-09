@@ -512,7 +512,7 @@ void vApplicationMallocFailedHook(void)
 
 ## 9. UiTask (P1): `app_ui.c`
 
-Dùng thư viện `stm32-ssd1306` (afiskon, giấy phép MIT), đã có sẵn trong `rtos/src`. `ssd1306_conf.h` đã đặt STM32F1, I2C2 (`hi2c2`) và chỉ bật font 7x10, vì các font còn lại tốn nhiều Flash. `ssd1306_Init()` có `HAL_Delay(100)` nhưng chạy ở UiTask (P1) nên không cản task khác.
+Dùng thư viện `stm32-ssd1306` (afiskon, giấy phép MIT), đã có sẵn trong `Core/Inc`, `Core/Src`. `ssd1306_conf.h` đã đặt STM32F1, I2C2 (`hi2c2`) và chỉ bật font 7x10, vì các font còn lại tốn nhiều Flash. `ssd1306_Init()` có `HAL_Delay(100)` nhưng chạy ở UiTask (P1) nên không cản task khác.
 
 ```c
 #include <stdio.h>

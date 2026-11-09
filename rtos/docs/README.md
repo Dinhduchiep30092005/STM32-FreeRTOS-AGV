@@ -4,9 +4,9 @@ Tài liệu mô tả phần **hệ điều hành thời gian thực** của xe A
 
 | Mảng | Thư mục | Nội dung |
 |---|---|---|
-| Mảng 1: cảm biến | `src/hardware` | `agv_line`, `agv_encoder`, `agv_sonar`, `agv_servo`, `agv_fc51`, `agv_sensor_system` + `Tut.md` (sơ đồ chân toàn xe) |
-| Mảng 2: điều khiển | `src/pid` | `pid`, `control`, `tb6612` |
-| Mảng 3: RTOS | `src/rtos` | Tài liệu này (`src/rtos/docs`) + `src/rtos/src`: `app_rtos.c`, `app_mode.c`, `app_comm.c`, `app_ui.c`, thư viện OLED `ssd1306` |
+| Mảng 1: cảm biến | `Core/Inc`, `Core/Src`; tài liệu ở `hardware/docs` | `agv_line`, `agv_encoder`, `agv_sonar`, `agv_servo`, `agv_fc51`, `agv_sensor_system` + `Tut.md` (sơ đồ chân toàn xe) |
+| Mảng 2: điều khiển | `Core/Inc`, `Core/Src`; test trên máy tính ở `tests` | `pid`, `control`, `tb6612` |
+| Mảng 3: RTOS | `Core/Inc`, `Core/Src`; tài liệu ở `rtos/docs` | Tài liệu này + `app_rtos.c`, `app_mode.c`, `app_comm.c`, `app_ui.c`, thư viện OLED `ssd1306` |
 
 | Mục | Nội dung |
 |---|---|
@@ -297,7 +297,7 @@ AGV_Project/                         ← project STM32CubeIDE
 │   │   ├── ssd1306.h, ssd1306_conf.h, ssd1306_fonts.h
 │   │   └── FreeRTOSConfig.h         ← CubeMX sinh, thêm vài dòng
 │   └── Src/
-│       ├── main.c                   ← CubeMX sinh (KHÔNG chép test_control_pc.c của Mảng 2)
+│       ├── main.c                   ← CubeMX sinh
 │       ├── freertos.c               ← CubeMX sinh, gọi app_rtos_init()
 │       ├── agv_*.c                  ← Mảng 1
 │       ├── pid.c, control.c, tb6612.c   ← Mảng 2

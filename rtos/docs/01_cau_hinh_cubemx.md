@@ -166,15 +166,12 @@ Heap: `heap_4`. Tab **Tasks and Queues**: giữ `defaultTask`, không tạo gì 
 1. **Project Manager → Code Generator**: tích `Generate peripheral initialization as a pair of '.c/.h' files per peripheral`. **Ctrl + S** để sinh code.
 2. Chép code các mảng vào project:
 
-| Nguồn | Đích |
+| Trong repo | Chép vào project CubeIDE |
 |---|---|
-| `src/hardware/src/*.h` | `Core/Inc/` |
-| `src/hardware/src/*.c` | `Core/Src/` |
-| `src/pid/src/pid.h`, `control.h`, `tb6612.h` | `Core/Inc/` |
-| `src/pid/src/pid.c`, `control.c`, `tb6612.c` | `Core/Src/` |
-| `src/pid/src/test_control_pc.c` | **Không chép**, đây là chương trình test trên máy tính, sẽ trùng `main()` |
-| `src/rtos/src/*.h` (`app_*` và thư viện SSD1306, gồm `ssd1306_conf.h` đã cấu hình sẵn) | `Core/Inc/` |
-| `src/rtos/src/*.c` | `Core/Src/` |
+| Toàn bộ `Core/Inc/` (cả 3 mảng và thư viện SSD1306, gồm `ssd1306_conf.h` đã cấu hình sẵn) | `Core/Inc/` |
+| Toàn bộ `Core/Src/` | `Core/Src/` |
+
+   Không file nào trùng tên với file CubeMX sinh, nên `main.c`, `freertos.c`… không bị ghi đè. `tests/test_control_pc.c` là chương trình test trên máy tính, có `main()` riêng, **không chép**.
 
 3. Mở `Core/Src/freertos.c`, thêm vào các vùng `USER CODE`:
 
