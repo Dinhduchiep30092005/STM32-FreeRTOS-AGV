@@ -182,7 +182,8 @@ static bool set_param(const char *name, float v)
     };
     for (size_t i = 0; i < sizeof tbl / sizeof tbl[0]; i++) {
         if (strcmp(name, tbl[i].name) == 0) {
-            if (v < tbl[i].lo || v > tbl[i].hi) return false;
+            /* Viết dạng !(trong khoảng) để NaN cũng bị từ chối */
+            if (!(v >= tbl[i].lo && v <= tbl[i].hi)) return false;
             xSemaphoreTake(mtxParams, portMAX_DELAY);   /* vùng giữ mutex: vài µs */
             *tbl[i].ptr = v;
             gParams.version++;                          /* báo ControlTask áp dụng */
@@ -233,8 +234,10 @@ static void handle_line(char *line)
         char *space = strchr(line, ' ');
         if (space) {
             *space = '\0';
-            float v = strtof(space + 1, NULL);
-            if (set_param(line, v)) {
+            char *end;
+            float v = strtof(space + 1, &end);
+            /* end == space + 1: không đọc được số, không được hiểu thành 0 */
+            if (end != space + 1 && set_param(line, v)) {
                 snprintf(out, sizeof out, "OK %s=%d.%02d\r\n",
                          line, (int)v, abs((int)(v * 100)) % 100);
                 comm_send(out);
@@ -322,7 +325,7 @@ Ghi chú:
 | 2 | `GET` | Dòng `P KP1=4500 KD1=350 ...` khớp `app_config.h` | ☐ |
 | 3 | `KP1 50` rồi `GET` | `OK KP1=50.00`, `GET` thấy `KP1=5000` | ☐ |
 | 4 | `KP1 999` | `ERR RANGE`, giá trị không đổi | ☐ |
-| 5 | `ABC` | `ERR CMD` | ☐ |
+| 5 | `ABC`; `KP1 ABC`; `KP1 NAN` | `ERR CMD`; `ERR RANGE`; `ERR RANGE` (giá trị không đổi) | ☐ |
 | 6 | `T1` | Các dòng `T,...` đều đặn khoảng 10 dòng/giây | ☐ |
 | 7 | Gửi liên tục 20 lệnh `GET` thật nhanh | Không treo; UART vẫn nhận lệnh sau đó | ☐ |
 | 8 | `STK` | Mỗi task còn ≥ 30 word trống. Nếu ít hơn thì tăng `STACK_*` | ☐ |
