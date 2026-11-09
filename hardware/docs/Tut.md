@@ -97,8 +97,20 @@ Bánh nào quay ngược chiều thì đổi hai dây của động cơ đó, kh
 | Chia áp Echo | Echo → R1 → PB8; PB8 → R2 → GND | R2 / (R1 + R2) ≈ 2/3. R1 = ___, R2 = ___; R2 nên nhỏ hơn nhiều so với pull-down nội (khoảng 40 kΩ) |
 | LED xanh, đỏ | PA11, PA12 → 220 Ω → anode LED; cathode → GND | Mức cao = sáng |
 | Còi | PA15 → 1 kΩ → cực B S8050; E → GND; C → còi (−); còi (+) → ___ V | Mức cao = kêu |
-| HC-05 | Xem `rtos/docs/05_giao_thuc_bluetooth.md`, mục 1 | |
 | ST-Link | Khi xe đang cấp nguồn, chỉ nối SWDIO, SWCLK, GND | Không nối thêm 3,3 V của ST-Link |
+
+**HC-05 (Bluetooth)**
+
+| Chân HC-05 | Nối với | Ghi chú |
+|---|---|---|
+| VCC | 5 V từ LM2596 | Module có đế ổn áp, chịu 3,6–6 V |
+| GND | GND chung | |
+| TXD | PA10 (USART1_RX) | Mức 3,3 V, nối thẳng |
+| RXD | PA9 (USART1_TX) | Mức 3,3 V, nối thẳng |
+| EN / KEY | Để trống | Chỉ dùng khi vào chế độ lệnh AT |
+| STATE | Để trống | |
+
+TX của bên này nối RX của bên kia. Nối nhầm TX với TX thì sẽ không nhận được dữ liệu.
 
 **Cấp nguồn lần đầu:** (1) đo điện áp khay; (2) chưa nối tải, chỉnh LM2596 ra 5,0 V; (3) đo thông mạch để chắc 5 V, 3,3 V và VM không chập GND; (4) kê xe lên rồi mới bật công tắc.
 
