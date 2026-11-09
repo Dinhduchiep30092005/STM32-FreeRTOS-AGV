@@ -85,7 +85,7 @@ Mỗi lệnh là một dòng chữ in hoa, kết thúc bằng `\n`. Xe luôn tr�
 
 Phản hồi: `OK KP1=50.00`. Giá trị ngoài khoảng: `ERR RANGE`.
 
-Lệnh tham số chỉ có tác dụng trên xe khi Mảng 2 đã thêm `control_set_gains()` và đặt `CONTROL_HAS_SET_GAINS 1` ([`02`](02_giao_dien_module.md), mục 4, việc 7). Trước đó CommTask vẫn nhận và lưu giá trị nhưng ControlTask chưa áp dụng.
+ControlTask áp dụng tham số mới qua `control_set_gains()` của Mảng 2 (`CONTROL_HAS_SET_GAINS` = 1, xem [`02`](02_giao_dien_module.md), mục 4, việc 7).
 
 ### 4.3. Lệnh xem thông tin
 
@@ -145,7 +145,14 @@ static void comm_send(const char *s)
     size_t n = strlen(s);
     if (n > sizeof txBuf) n = sizeof txBuf;
     memcpy(txBuf, s, n);
-    if (HAL_UART_Transmit_IT(&huart1, (uint8_t *)txBuf, n) == HAL_OK) {
+
+    /* USART1 (NVIC 6) bị che trong critical section, nên ngắt RX không thể chen vào
+     * lúc HAL đang giữ __HAL_LOCK(huart). Xem ghi chú bên dưới. */
+    taskENTER_CRITICAL();
+    HAL_StatusTypeDef st = HAL_UART_Transmit_IT(&huart1, (uint8_t *)txBuf, n);
+    taskEXIT_CRITICAL();
+
+    if (st == HAL_OK) {
         /* Blocked tới khi phần cứng gửi xong, không tốn CPU */
         xSemaphoreTake(semTxDone, pdMS_TO_TICKS(200));
     }
@@ -300,6 +307,7 @@ void CommTask(void *arg)
 
 Ghi chú:
 
+- **Critical section trong `comm_send`:** TX và RX dùng chung `__HAL_LOCK(huart)`. Nếu ngắt RX đến đúng lúc `HAL_UART_Transmit_IT` đang giữ khóa, `HAL_UART_Receive_IT` trong callback trả `HAL_BUSY`, không ai bật lại nhận và UART im lặng vĩnh viễn (không có lỗi nào báo về `HAL_UART_ErrorCallback`). Đoạn được bảo vệ chỉ dài vài µs. Mọi lệnh gửi UART phải đi qua `comm_send`.
 - `strtof` kéo thêm khoảng 3–5 KB Flash, vẫn vừa 64 KB. Nếu thiếu Flash thì tự viết hàm đổi chuỗi sang số.
 - Lệnh tự đổi sang chữ in hoa, nên gõ `m1` hay `M1` đều được.
 - `send_mode_cmd` gửi vào `qMode` với timeout 10 ms. Queue đầy (ModeTask bị treo) thì báo `ERR BUSY` thay vì làm CommTask kẹt theo.

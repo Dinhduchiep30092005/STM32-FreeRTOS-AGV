@@ -105,7 +105,7 @@ Lý do sắp xếp ưu tiên:
 
 | Bit | Tên | Ai đặt / xóa | Ý nghĩa |
 |---|---|---|---|
-| 0 | `EVT_OBSTACLE` | SonarTask | Vật cản gần hơn ngưỡng (15 cm ở LINE, 8 cm ở FOLLOW). Xóa khi xa hơn 20 cm trong 3 lần đo liên tiếp |
+| 0 | `EVT_OBSTACLE` | SonarTask | Vật cản gần hơn ngưỡng (15 cm ở LINE, 8 cm ở FOLLOW). Xóa khi xa hơn 20 cm (hoặc Echo có lên nhưng không có vọng về) trong 3 lần đo liên tiếp |
 | 1 | `EVT_LINE_LOST` | SensorTask | `AGV_Line_Read().valid == false` (cả 5 mắt không thấy line) |
 | 2 | `EVT_ESTOP` | ModeTask | Dừng khẩn do người dùng gửi lệnh `S` |
 | 4 | `MODE_IDLE` | ModeTask | Chỉ một bit `MODE_*` được bật tại một thời điểm |
@@ -113,7 +113,7 @@ Lý do sắp xếp ưu tiên:
 | 6 | `MODE_FOLLOW` | ModeTask | |
 | 7 | `MODE_STOP` | ModeTask | Dừng tạm vì vật cản, tự chạy lại khi đường thông |
 
-Quy tắc an toàn trong ControlTask: **nếu không có bit `MODE_LINE` hoặc `MODE_FOLLOW`, hoặc có `EVT_OBSTACLE` / `EVT_ESTOP`, hoặc dữ liệu cảm biến cũ hơn 50 ms, thì gọi `tb6612_stop()`.**
+Quy tắc an toàn trong ControlTask: **nếu không có bit `MODE_LINE` hoặc `MODE_FOLLOW`, hoặc có `EVT_OBSTACLE` / `EVT_ESTOP`, hoặc `qSensor` cũ hơn 50 ms, hoặc `qRange` cũ hơn 150 ms, thì gọi `tb6612_stop()`.**
 
 ---
 
@@ -217,7 +217,8 @@ UiTask (P1) vẽ OLED mỗi 200 ms và liên tục bị ControlTask, SensorTask 
 
 1. Hết 35 ms không có Echo → `xSemaphoreTake` trả về timeout → `AGV_Sonar_Poll()` trả `valid = false`.
 2. Không đặt `EVT_OBSTACLE`. Ở LINE xe vẫn chạy; ở FOLLOW xe đứng yên.
-3. Nhờ timeout, SonarTask không bao giờ kẹt vô hạn.
+3. Đang ở STOP mà cảm biến không phản hồi (Echo không lên): `EVT_OBSTACLE` được giữ nguyên, xe không tự chạy lại. Echo có lên nhưng không có vọng về thì vẫn tính là đường thông.
+4. Nhờ timeout, SonarTask không bao giờ kẹt vô hạn.
 
 ### KB8. Dừng khẩn bằng điện thoại
 
@@ -280,7 +281,7 @@ Giới hạn Liu & Layland của Rate Monotonic với 6 task ≈ **73 %**. Tổn
 | `control_set_gains(...)` | 2 | ControlTask | Đổi hệ số khi đang chạy |
 | `tb6612_init()`, `tb6612_set_motor()`, `tb6612_stop()` | 2 | `app_rtos_init`, ControlTask | **Chỉ ControlTask** gọi set/stop |
 
-Chi tiết và danh sách việc cần sửa ở code Mảng 2: [`02_giao_dien_module.md`](02_giao_dien_module.md).
+Chi tiết và các sửa đổi ở code Mảng 2: [`02_giao_dien_module.md`](02_giao_dien_module.md).
 
 ---
 
@@ -312,7 +313,7 @@ AGV_Project/                         ← project STM32CubeIDE
 | File | Nội dung |
 |---|---|
 | [`01_cau_hinh_cubemx.md`](01_cau_hinh_cubemx.md) | Tạo project, clock, chân, TIM1/2/3/4, EXTI, USART1, I2C2, FreeRTOS, NVIC |
-| [`02_giao_dien_module.md`](02_giao_dien_module.md) | Kiểu dữ liệu trao đổi, quy ước dấu, cách ghép driver Mảng 1 và PID Mảng 2, **việc Mảng 2 cần sửa** |
+| [`02_giao_dien_module.md`](02_giao_dien_module.md) | Kiểu dữ liệu trao đổi, quy ước dấu, cách ghép driver Mảng 1 và PID Mảng 2, **các sửa đổi ở Mảng 2** |
 | [`03_trien_khai_task.md`](03_trien_khai_task.md) | Code `app_rtos.c`: đối tượng IPC, ControlTask, SensorTask, SonarTask, các callback ngắt, hook lỗi, UiTask |
 | [`04_may_trang_thai.md`](04_may_trang_thai.md) | ModeTask: bảng chuyển trạng thái, code, bảng kiểm thử |
 | [`05_giao_thuc_bluetooth.md`](05_giao_thuc_bluetooth.md) | Lệnh, telemetry, cấu hình HC-05, CommTask |

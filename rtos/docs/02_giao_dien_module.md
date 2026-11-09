@@ -1,6 +1,6 @@
 # 02. Ghép code của các mảng
 
-Cách phần RTOS dùng driver cảm biến (Mảng 1) và bộ điều khiển (Mảng 2): quy ước chung, kiểu dữ liệu trao đổi giữa các task, cách chuyển đổi dữ liệu, và **danh sách việc Mảng 2 cần sửa** trước khi chạy trên xe.
+Cách phần RTOS dùng driver cảm biến (Mảng 1) và bộ điều khiển (Mảng 2): quy ước chung, kiểu dữ liệu trao đổi giữa các task, cách chuyển đổi dữ liệu, và **các sửa đổi ở code Mảng 2** (việc 1–7 đã xong, việc 8 chưa làm).
 
 [← Về README](README.md)
 
@@ -108,7 +108,7 @@ Khi `sonar.valid == false`, `distance_cm = 0`. Nếu truyền 0 vào `control_fo
 
 ---
 
-## 4. Việc Mảng 2 cần sửa trong `src/pid/src`
+## 4. Các sửa đổi ở Mảng 2 trong `src/pid/src`
 
 > **Trạng thái:** Việc 1–7 đã sửa trong code ngày 9/11, Việc 8 chưa làm. Nội dung bên dưới giữ lại để đối chiếu.
 
@@ -205,7 +205,7 @@ void control_set_gains(float kp_line, float kd_line,
 }
 ```
 
-Chỉ ControlTask gọi hàm này (cùng task với `control_line_step`), nên không cần khóa bên trong `control.c`. Bổ sung xong thì đặt `CONTROL_HAS_SET_GAINS 1` trong `app_config.h`.
+Chỉ ControlTask gọi hàm này (cùng task với `control_line_step`), nên không cần khóa bên trong `control.c`. Hàm đã có trong `control.c`, `app_config.h` đặt `CONTROL_HAS_SET_GAINS 1`.
 
 ### Việc 8 (nên làm). Cải thiện chất lượng điều khiển
 
@@ -257,7 +257,7 @@ float AGV_Encoder_GetRpmPeriod(uint8_t side)
 
 ## 6. Checklist trước khi ghép
 
-- [x] Mảng 2 đã sửa việc 1–6.
+- [x] Mảng 2 đã sửa việc 1–7.
 - [ ] Mảng 1 đã test cực tính dò line (`AGV_LINE_ACTIVE`), FC-51 (`AGV_FC_ACTIVE`), và hiệu chuẩn `CPWR`.
 - [ ] Không file nào ngoài `app_rtos.c` định nghĩa `HAL_GPIO_EXTI_Callback`.
 - [ ] Không file nào ngoài `app_rtos.c` gọi `tb6612_set_motor()` / `tb6612_stop()` (trừ hook lỗi).

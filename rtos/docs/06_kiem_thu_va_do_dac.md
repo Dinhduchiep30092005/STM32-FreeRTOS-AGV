@@ -40,7 +40,7 @@ Thứ tự dựng hệ thống từng bước, cách kiểm thử các kịch b�
 | KB4 Đổi chế độ | Gửi `M1` khi IDLE | Bánh quay trong < 50 ms kể từ lúc nhận lệnh | ___ ms | ☐ |
 | KB5 Chỉnh Kp | Gửi `KP1 40` khi đang chạy | Xe đổi hành vi ngay, không giật, không reset | – | ☐ |
 | KB6 Bám vật | `M2`, đi tay trước xe | Giữ khoảng 20 ± 5 cm | ___ cm | ☐ |
-| KB7 Sonar lỗi | Rút dây Echo khi đang ở LINE | Xe vẫn bám line, không treo | – | ☐ |
+| KB7 Sonar lỗi | Rút dây Echo khi đang ở LINE; lặp lại khi đang ở STOP vì vật cản | LINE: xe vẫn bám line, không treo. STOP: xe **không** tự chạy lại | – | ☐ |
 | KB8 Dừng khẩn | Gửi `S` | Dừng trong < 50 ms | ___ ms | ☐ |
 | KB9 Tràn stack | Tạm giảm `STACK_COMM` còn 64, gửi `STK` | LED đỏ sáng, động cơ dừng | – | ☐ |
 
@@ -124,7 +124,14 @@ Bộ đếm 32 bit ở 72 MHz tràn sau khoảng 59 giây, nên đọc thống k
 else if (strcmp(line, "CPU") == 0) {
     static char buf[400];            /* static: không chiếm stack */
     vTaskGetRunTimeStats(buf);
-    comm_send(buf);
+    /* Kết quả dài hơn txBuf (128 byte) nên phải gửi từng đoạn */
+    size_t left = strlen(buf);
+    for (const char *p = buf; left > 0; ) {
+        comm_send(p);
+        size_t sent = (left > sizeof txBuf) ? sizeof txBuf : left;
+        p += sent;
+        left -= sent;
+    }
 }
 ```
 
@@ -180,7 +187,7 @@ STK IDLE 98
 | Ở FOLLOW xe lùi khi vật ở xa | Dấu PID khoảng cách ngược | Việc 2 |
 | Mất line là một bánh quay lùi hết tốc độ | Tốc độ mục tiêu âm nhưng rpm không dấu | Việc 3 |
 | Servo giật hoặc động cơ không chạy | `tb6612.c` vẫn dùng `htim1` (trùng servo) | Việc 4: đổi sang `htim3` |
-| Nhận được vài lệnh rồi UART im lặng | Lỗi overrun, không bật lại nhận | Có `HAL_UART_ErrorCallback` (xem [`03`](03_trien_khai_task.md), mục 6.3) |
+| Nhận được vài lệnh rồi UART im lặng | Lỗi overrun, không bật lại nhận; hoặc ngắt RX gặp `HAL_BUSY` vì TX đang giữ khóa HAL | Có `HAL_UART_ErrorCallback` (xem [`03`](03_trien_khai_task.md), mục 7); gửi qua `comm_send` có critical section (xem [`05`](05_giao_thuc_bluetooth.md), mục 6) |
 | Không nhận được gì qua Bluetooth | Nối TX–TX; sai baud; app không gửi `\n` | TX nối RX; đúng baud với HC-05; bật Newline = LF trong app |
 | OLED đứng hình nhưng xe vẫn chạy | UiTask bị chặn ở I2C (dây lỏng) | Kiểm tra dây SDA/SCL; đặt timeout cho hàm I2C. Xe vẫn chạy chính là nhờ UiTask ưu tiên thấp nhất |
 | Xe giật mạnh khi chạy lại sau dừng | Tích phân PID không được reset | Kiểm tra `control_reset_all()` được gọi trong nhánh dừng và khi đổi chế độ |

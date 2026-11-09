@@ -67,6 +67,7 @@ Code phần RTOS: `app_config.h`, `app_rtos.h`, `app_rtos.c` (khởi tạo, Cont
 #define STOP_RESUME_MS       1000
 #define LINE_LOST_IDLE_MS    2000
 #define SENSOR_STALE_MS        50   /* dữ liệu cũ hơn mức này -> dừng xe */
+#define RANGE_STALE_MS        150   /* qRange: hơn 2 chu kỳ sonar (60 ms)   */
 
 /* ----- Tham số mặc định (khớp control_init của Mảng 2) ----- */
 #define DEF_KP_LINE          45.0f
@@ -160,6 +161,7 @@ StreamBufferHandle_t sbUartRx;
 Params_t             gParams;
 
 static uint8_t uartRxByte;
+static volatile bool echoRose;   /* ISR đặt khi Echo lên, SonarTask xóa trước mỗi lần đo */
 
 static void ControlTask(void *arg);
 static void SensorTask (void *arg);
@@ -262,7 +264,9 @@ static void ControlTask(void *arg)
         if (mode != prevMode) { control_reset_all(); prevMode = mode; }
 
         /* 4. Quyết định an toàn TRƯỚC khi tính PID */
-        bool stale = (xTaskGetTickCount() - s.tick) > pdMS_TO_TICKS(SENSOR_STALE_MS);
+        TickType_t now = xTaskGetTickCount();
+        bool stale = (now - s.tick) > pdMS_TO_TICKS(SENSOR_STALE_MS)
+                  || (now - r.tick) > pdMS_TO_TICKS(RANGE_STALE_MS);
         bool stop  = (ev & (EVT_OBSTACLE | EVT_ESTOP))
                   || !(mode & (MODE_LINE | MODE_FOLLOW))
                   || stale;
@@ -299,7 +303,7 @@ static void ControlTask(void *arg)
 Giải thích khi bảo vệ:
 - **`vTaskDelayUntil`** giữ chu kỳ đúng 10 ms, `dt` của PID luôn đúng.
 - **Mặc định là dừng:** chỉ chạy khi có đúng bit chế độ và không có cờ nguy hiểm.
-- **Kiểm tra dữ liệu cũ:** SensorTask treo thì dữ liệu trong mailbox cũ đi, ControlTask tự dừng xe.
+- **Kiểm tra dữ liệu cũ:** SensorTask hoặc SonarTask treo thì dữ liệu trong mailbox cũ đi, ControlTask tự dừng xe. SonarTask vẫn ghi `qRange` mỗi 60 ms kể cả khi không có Echo, nên siêu âm mất tín hiệu (KB7) không bị tính là dữ liệu cũ.
 - **Chỉ ControlTask chạm vào các bộ PID** trong `control.c` (kể cả đổi hệ số), nên `control.c` không cần khóa.
 
 ---
@@ -383,6 +387,7 @@ static void SonarTask(void *arg)
         /* --- Đo: Poll dọn trạng thái cũ -> Trigger -> Blocked chờ Echo --- */
         (void)AGV_Sonar_Poll();            /* lần đo trước còn treo -> đánh dấu TIMEOUT */
         xSemaphoreTake(semEcho, 0);        /* xóa semaphore còn sót */
+        echoRose = false;
         if (AGV_Sonar_Trigger()) {
             xSemaphoreTake(semEcho, pdMS_TO_TICKS(AGV_SONAR_TIMEOUT_MS));
         }
@@ -395,16 +400,19 @@ static void SonarTask(void *arg)
         /* --- Vật cản: có trễ (hysteresis), chỉ khi nhìn thẳng và servo đã đứng yên --- */
         if (deg == SERVO_CENTER && settled) {
             float thr = (ev & MODE_FOLLOW) ? OBSTACLE_CM_FOLLOW : OBSTACLE_CM_LINE;
+            /* Echo có lên nhưng không xuống kịp: không có vật trong tầm đo */
+            bool noTarget = echoRose && (r.sonar.state != AGV_SONAR_READY);
             if (r.sonar.valid && r.sonar.distance_cm < thr) {
                 xEventGroupSetBits(egSystem, EVT_OBSTACLE);
                 clearCnt = 0;
-            } else if (!r.sonar.valid || r.sonar.distance_cm > OBSTACLE_CLEAR_CM) {
+            } else if (noTarget || (r.sonar.valid && r.sonar.distance_cm > OBSTACLE_CLEAR_CM)) {
                 if (++clearCnt >= OBSTACLE_CLEAR_COUNT) {
                     xEventGroupClearBits(egSystem, EVT_OBSTACLE);
                     clearCnt = OBSTACLE_CLEAR_COUNT;
                 }
             } else {
-                clearCnt = 0;              /* giữa ngưỡng và 20 cm: giữ nguyên */
+                clearCnt = 0;              /* giữa ngưỡng và 20 cm, hoặc cảm biến không
+                                              phản hồi: giữ nguyên trạng thái */
             }
         }
     }
@@ -415,6 +423,7 @@ static void SonarTask(void *arg)
 - **Chờ bằng semaphore:** trong 0–35 ms chờ Echo, SonarTask Blocked, không tốn CPU. Có timeout nên rút dây Echo cũng không kẹt.
 - **Hysteresis:** vào vật cản khi < 15 cm, chỉ thoát khi > 20 cm trong 3 lần đo liên tiếp, tránh bật/tắt liên tục quanh ngưỡng.
 - **Chỉ đánh giá khi servo nhìn thẳng và đã đứng yên** (theo lưu ý của Mảng 1: servo cần 150–300 ms để ổn định).
+- **Không đo được thì không coi là đường thông.** Echo có lên nhưng không xuống trong 35 ms nghĩa là phía trước trống, được tính là một lần thông. Echo không lên (`echoRose == false`) nghĩa là cảm biến không phản hồi, `EVT_OBSTACLE` giữ nguyên nên xe đang STOP không tự chạy lại. Xung quá ngắn (< 100 µs, vật sát cảm biến) có `state == READY` nên cũng không được tính là thông.
 
 ---
 
@@ -427,6 +436,11 @@ static void SonarTask(void *arg)
 void HAL_GPIO_EXTI_Callback(uint16_t pin)
 {
     AGV_Sensors_OnEXTI(pin);                      /* Mảng 1: đếm xung, đo Echo */
+
+    if (pin == AGV_ECHO_PIN &&
+        HAL_GPIO_ReadPin(AGV_ECHO_PORT, AGV_ECHO_PIN) == GPIO_PIN_SET) {
+        echoRose = true;                          /* cảm biến có phản hồi */
+    }
 
     if (pin == AGV_ECHO_PIN && semEcho != NULL &&
         HAL_GPIO_ReadPin(AGV_ECHO_PORT, AGV_ECHO_PIN) == GPIO_PIN_RESET) {
