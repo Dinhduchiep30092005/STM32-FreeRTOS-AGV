@@ -24,8 +24,8 @@ Giữ nguyên toàn bộ chân của Mảng 1. Các khối còn lại xếp vào
 |---|---|---|---|
 | PA0–PA4 | Dò line S0…S4 | GPIO Input | 1 |
 | PA5 | Dự phòng | – | |
-| PA6 | PWMA (TB6612) | TIM3_CH1, PWM 20 kHz | 2 |
-| PA7 | PWMB (TB6612) | TIM3_CH2, PWM 20 kHz | 2 |
+| PA6 | PWMA (TB6612) | TIM3_CH1, PWM 18 kHz | 2 |
+| PA7 | PWMB (TB6612) | TIM3_CH2, PWM 18 kHz | 2 |
 | PA8 | Servo SG90 | TIM1_CH1, PWM 50 Hz | 1 |
 | PA9 | RXD của HC-05 | USART1_TX | 3 |
 | PA10 | TXD của HC-05 | USART1_RX | 3 |
@@ -51,7 +51,7 @@ Phân chia timer:
 |---|---|
 | TIM1 | PWM servo 50 Hz (PA8) |
 | TIM2 | Đếm µs tự do, đo Echo và encoder (không xuất chân) |
-| TIM3 | PWM động cơ 20 kHz (PA6, PA7) |
+| TIM3 | PWM động cơ 18 kHz (PA6, PA7; PSC = 3, ARR = 999, khớp MAX_PWM = 1000 của Mảng 2) |
 | TIM4 | **Timebase của HAL** (SYS → Timebase Source = TIM4), vì FreeRTOS dùng SysTick |
 
 Lưu ý: PA11, PA12 là chân USB, không bật USB trong CubeMX. PA15, PB3, PB4 chỉ dùng được khi chọn Debug = Serial Wire.
