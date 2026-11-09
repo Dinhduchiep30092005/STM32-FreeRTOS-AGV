@@ -67,7 +67,7 @@ Các User Label in đậm **phải đặt đúng tên**, vì `tb6612.c` của M�
 | Chân | GPIO mode | Pull |
 |---|---|---|
 | PB6, PB7 (encoder) | External Interrupt Mode with **Rising** edge trigger detection | No pull (hoặc Pull-up nếu tín hiệu FC-03 trôi) |
-| PB8 (Echo) | External Interrupt Mode with **Rising/Falling** edge trigger detection | **Pull-down** (tuột dây Echo thì chân về 0, không nhiễu thành xung giả) |
+| PB8 (Echo) | External Interrupt Mode with **Rising/Falling** edge trigger detection | **Pull-down** (tuột dây Echo thì chân về 0, không nhiễu thành xung giả). Khi bật điện trở nội phải **giữ mạch chia áp 5 V → 3,3 V**, không nối thẳng Echo 5 V vào PB8 |
 
 **Kiểm tra:** không chân nào bị tô vàng/đỏ.
 

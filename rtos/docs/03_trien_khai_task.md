@@ -388,7 +388,8 @@ static void SonarTask(void *arg)
         (void)AGV_Sonar_Poll();            /* lần đo trước còn treo -> đánh dấu TIMEOUT */
         xSemaphoreTake(semEcho, 0);        /* xóa semaphore còn sót */
         echoRose = false;
-        if (AGV_Sonar_Trigger()) {
+        bool triggered = AGV_Sonar_Trigger();   /* false: Echo lần trước còn ở mức cao */
+        if (triggered) {
             xSemaphoreTake(semEcho, pdMS_TO_TICKS(AGV_SONAR_TIMEOUT_MS));
         }
         r.sonar    = AGV_Sonar_Poll();     /* READY -> valid; quá hạn -> valid = false */
@@ -397,8 +398,8 @@ static void SonarTask(void *arg)
         r.tick     = xTaskGetTickCount();
         xQueueOverwrite(qRange, &r);
 
-        /* --- Vật cản: có trễ (hysteresis), chỉ khi nhìn thẳng và servo đã đứng yên --- */
-        if (deg == SERVO_CENTER && settled) {
+        /* --- Vật cản: có trễ (hysteresis), chỉ khi đã phát đo, nhìn thẳng và servo đứng yên --- */
+        if (triggered && deg == SERVO_CENTER && settled) {
             float thr = (ev & MODE_FOLLOW) ? OBSTACLE_CM_FOLLOW : OBSTACLE_CM_LINE;
             /* Echo có lên nhưng không xuống kịp: không có vật trong tầm đo */
             bool noTarget = echoRose && (r.sonar.state != AGV_SONAR_READY);
@@ -424,6 +425,7 @@ static void SonarTask(void *arg)
 - **Hysteresis:** vào vật cản khi < 15 cm, chỉ thoát khi > 20 cm trong 3 lần đo liên tiếp, tránh bật/tắt liên tục quanh ngưỡng.
 - **Chỉ đánh giá khi servo nhìn thẳng và đã đứng yên** (theo lưu ý của Mảng 1: servo cần 150–300 ms để ổn định).
 - **Không đo được thì không coi là đường thông.** Echo có lên nhưng không xuống trong 35 ms nghĩa là phía trước trống, được tính là một lần thông. Echo không lên (`echoRose == false`) nghĩa là cảm biến không phản hồi, `EVT_OBSTACLE` giữ nguyên nên xe đang STOP không tự chạy lại. Xung quá ngắn (< 100 µs, vật sát cảm biến) có `state == READY` nên cũng không được tính là thông.
+- **Chu kỳ không phát đo được thì bỏ qua đánh giá.** Một số module HC-SR04 giá rẻ giữ Echo ở mức cao tới khoảng 200 ms khi không có vọng về, làm `AGV_Sonar_Trigger()` từ chối phát ở vài chu kỳ sau. Nếu các chu kỳ đó xóa `clearCnt` thì bộ đếm không bao giờ tới 3 và xe kẹt ở STOP. Bỏ qua chúng thì bộ đếm giữ nguyên; Echo kẹt mức cao thật thì không có lần đo nào được tính, xe vẫn đứng yên.
 
 ---
 
